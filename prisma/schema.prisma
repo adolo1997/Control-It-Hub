@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlatformRole {
+  SUPER_ADMIN
+  USER
+}
+
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  TECH
+  BILLING
+  VIEWER
+}
+
+enum IntegrationType {
+  PRTG
+  BACKUP
+  RMM
+  PSA
+  CUSTOM
+}
+
+enum IntegrationStatus {
+  DRAFT
+  ACTIVE
+  ERROR
+  PAUSED
+}
+
+enum LicenseStatus {
+  ACTIVE
+  EXPIRING
+  EXPIRED
+  CANCELLED
+}
+
+enum RecordSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+model User {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  name              String
+  passwordHash      String
+  platformRole      PlatformRole @default(USER)
+  isActive          Boolean      @default(true)
+  lastLoginAt       DateTime?
+  passwordChangedAt DateTime     @default(now())
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  memberships Membership[]
+  auditLogs   AuditLog[]
+}
+
+model Company {
+  id        String        @id @default(cuid())
+  name      String
+  slug      String        @unique
+  taxId     String?
+  status    CompanyStatus @default(TRIAL)
+  plan      String        @default("starter")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  memberships  Membership[]
+  integrations Integration[]
+  licenses     License[]
+  records      OperationalRecord[]
+  auditLogs    AuditLog[]
+}
+
+model Membership {
+  id        String         @id @default(cuid())
+  role      MembershipRole @default(VIEWER)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, companyId])
+  @@index([companyId, role])
+}
+
+model Integration {
+  id              String            @id @default(cuid())
+  type            IntegrationType
+  name            String
+  baseUrl         String?
+  status          IntegrationStatus @default(DRAFT)
+  encryptedSecret String?
+  settings        Json?
+  lastSyncAt      DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  records OperationalRecord[]
+
+  @@unique([companyId, type, name])
+  @@index([companyId, type])
+}
+
+model License {
+  id            String        @id @default(cuid())
+  provider      String
+  product       String
+  seats         Int           @default(1)
+  status        LicenseStatus @default(ACTIVE)
+  purchaseDate  DateTime?
+  renewalDate   DateTime?
+  costCents     Int?
+  currency      String        @default("EUR")
+  vendorAccount String?
+  notes         String?
+  metadata      Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, renewalDate])
+  @@index([companyId, status])
+  @@unique([companyId, provider, product])
+}
+
+model OperationalRecord {
+  id        String         @id @default(cuid())
+  source    String
+  title     String
+  detail    String?
+  severity  RecordSeverity @default(INFO)
+  occurredAt DateTime      @default(now())
+  metadata  Json?
+  createdAt DateTime       @default(now())
+
+  companyId     String
+  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  integrationId String?
+  integration   Integration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, occurredAt])
+  @@index([companyId, severity])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String?
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, createdAt])
+  @@index([userId, createdAt])
+}
