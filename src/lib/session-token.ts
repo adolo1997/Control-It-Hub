@@ -1,12 +1,20 @@
 import { jwtVerify, SignJWT } from "jose";
+import { z } from "zod";
 
 export const sessionCookieName = "cih_session";
 
-export type SessionPayload = {
-  userId: string;
-  companyId: string;
-  membershipRole: string;
-  platformRole: string;
+export const sessionPayloadSchema = z.object({
+  userId: z.string().min(1),
+  companyId: z.string().min(1),
+  membershipRole: z.enum(["OWNER", "ADMIN", "TECH", "BILLING", "VIEWER"]),
+  platformRole: z.enum(["SUPER_ADMIN", "USER"]),
+});
+
+export type SessionPayload = z.infer<typeof sessionPayloadSchema>;
+
+export type VerifiedSessionPayload = SessionPayload & {
+  iat?: number;
+  exp?: number;
 };
 
 function getSecretKey() {
@@ -19,7 +27,9 @@ function getSecretKey() {
 }
 
 export async function createSessionToken(payload: SessionPayload) {
-  return new SignJWT(payload)
+  const parsedPayload = sessionPayloadSchema.parse(payload);
+
+  return new SignJWT(parsedPayload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("8h")
@@ -28,9 +38,11 @@ export async function createSessionToken(payload: SessionPayload) {
 
 export async function verifySessionToken(token: string) {
   const { payload } = await jwtVerify(token, getSecretKey());
+  const parsedPayload = sessionPayloadSchema.parse(payload);
 
-  return payload as SessionPayload & {
-    iat: number;
-    exp: number;
-  };
+  return {
+    ...parsedPayload,
+    iat: typeof payload.iat === "number" ? payload.iat : undefined,
+    exp: typeof payload.exp === "number" ? payload.exp : undefined,
+  } satisfies VerifiedSessionPayload;
 }

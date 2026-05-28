@@ -1,9 +1,9 @@
 import { StatusBadge } from "@/components/status-badge";
 import { db } from "@/lib/db";
-import { getCurrentSession } from "@/lib/session";
+import { requireCurrentSession } from "@/lib/session";
 
 export default async function EmpresasPage() {
-  await getCurrentSession();
+  await requireCurrentSession();
   const companies = await db.company.findMany({
     orderBy: { name: "asc" },
     include: {

@@ -1,12 +1,12 @@
 import { StatusBadge } from "@/components/status-badge";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
-import { getCurrentSession } from "@/lib/session";
+import { requireCurrentSession } from "@/lib/session";
 
 export default async function IntegracionesPage() {
-  const session = await getCurrentSession();
+  const session = await requireCurrentSession();
   const integrations = await db.integration.findMany({
-    where: { companyId: session!.company.id },
+    where: { companyId: session.company.id },
     orderBy: { updatedAt: "desc" },
   });
 

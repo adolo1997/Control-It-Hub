@@ -3,11 +3,11 @@ import { Activity, Building2, KeyRound, Layers3 } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { db } from "@/lib/db";
 import { daysUntil, formatDate } from "@/lib/format";
-import { getCurrentSession } from "@/lib/session";
+import { requireCurrentSession } from "@/lib/session";
 
 export default async function DashboardPage() {
-  const session = await getCurrentSession();
-  const companyId = session!.company.id;
+  const session = await requireCurrentSession();
+  const companyId = session.company.id;
 
   const [licenseCount, expiringLicenses, integrations, records, companies] = await Promise.all([
     db.license.count({ where: { companyId } }),
@@ -33,7 +33,7 @@ export default async function DashboardPage() {
       <header className="topbar">
         <div>
           <h1>Panel operativo</h1>
-          <p className="muted">Vista central de {session!.company.name}</p>
+          <p className="muted">Vista central de {session.company.name}</p>
         </div>
       </header>
 
@@ -100,7 +100,7 @@ export default async function DashboardPage() {
               <div className="record-item" key={record.id}>
                 <StatusBadge value={record.severity} />
                 <strong>{record.title}</strong>
-                <span className="muted">{record.source} · {formatDate(record.occurredAt)}</span>
+                <span className="muted">{record.source} - {formatDate(record.occurredAt)}</span>
               </div>
             ))}
           </div>

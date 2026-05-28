@@ -1,12 +1,12 @@
 import { StatusBadge } from "@/components/status-badge";
 import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
-import { getCurrentSession } from "@/lib/session";
+import { requireCurrentSession } from "@/lib/session";
 
 export default async function LicenciasPage() {
-  const session = await getCurrentSession();
+  const session = await requireCurrentSession();
   const licenses = await db.license.findMany({
-    where: { companyId: session!.company.id },
+    where: { companyId: session.company.id },
     orderBy: [{ renewalDate: "asc" }, { provider: "asc" }],
   });
 

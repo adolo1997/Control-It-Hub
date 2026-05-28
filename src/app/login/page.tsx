@@ -1,8 +1,16 @@
 import { ShieldCheck } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/login-form";
+import { getCurrentSession } from "@/lib/session";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await getCurrentSession();
+
+  if (session) {
+    redirect("/dashboard");
+  }
+
   return (
     <main className="login-shell">
       <section className="login-panel">

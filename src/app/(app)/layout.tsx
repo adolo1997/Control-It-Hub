@@ -1,16 +1,10 @@
-import { redirect } from "next/navigation";
-
 import { AppSidebar } from "@/components/app-sidebar";
-import { getCurrentSession } from "@/lib/session";
+import { requireCurrentSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const session = await getCurrentSession();
-
-  if (!session) {
-    redirect("/login");
-  }
+  const session = await requireCurrentSession();
 
   return (
     <div className="app-shell">
