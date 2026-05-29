@@ -388,17 +388,53 @@ textarea {
   margin: 0;
 }
 
-.compact-select {
-  min-height: 34px;
-  min-width: 190px;
-  padding: 6px 10px;
+.status-select {
+  min-height: 28px;
+  max-width: 230px;
+  padding: 4px 28px 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
   font-size: 13px;
+  font-weight: 800;
 }
 
-.status-stack {
-  display: grid;
-  justify-items: start;
+.status-select.success {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.status-select.warning {
+  color: #713f12;
+  background: #fef3c7;
+}
+
+.status-select.danger {
+  color: #7f1d1d;
+  background: #fee2e2;
+}
+
+.status-select:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.table-card-header {
+  align-items: flex-start;
+  padding-bottom: 12px;
+}
+
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
+}
+
+.search-input {
+  min-width: min(300px, 100%);
+  min-height: 34px;
+  padding: 7px 10px;
 }
 
 .stat {

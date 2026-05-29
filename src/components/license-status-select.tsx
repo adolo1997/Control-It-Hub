@@ -1,5 +1,6 @@
 "use client";
 
+import clsx from "clsx";
 import { useRef, useTransition } from "react";
 
 import { updateLicenseStatus } from "@/app/(app)/actions";
@@ -8,6 +9,12 @@ const statusLabels = {
   ACTIVE: "Activa",
   EXPIRING: "Pendiente renovacion",
   EXPIRED: "Expirada",
+};
+
+const statusClassNames = {
+  ACTIVE: "success",
+  EXPIRING: "warning",
+  EXPIRED: "danger",
 };
 
 type LicenseStatusSelectProps = {
@@ -24,7 +31,7 @@ export function LicenseStatusSelect({ id, status }: LicenseStatusSelectProps) {
       <input name="id" type="hidden" value={id} />
       <select
         aria-label="Estado de licencia"
-        className="input compact-select"
+        className={clsx("status-select", statusClassNames[status])}
         defaultValue={status}
         disabled={isPending}
         name="status"

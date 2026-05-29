@@ -1,6 +1,5 @@
 import { LicenseStatusSelect } from "@/components/license-status-select";
 import { Modal } from "@/components/modal";
-import { StatusBadge } from "@/components/status-badge";
 import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
 import { requireCurrentSession } from "@/lib/session";
@@ -43,10 +42,28 @@ function visibleLicenseStatus(status: string, renewalDate: Date | null) {
   return status === "CANCELLED" ? "EXPIRED" : (status as "ACTIVE" | "EXPIRING" | "EXPIRED");
 }
 
-export default async function LicenciasPage() {
+type LicenciasPageProps = {
+  searchParams?: Promise<{ q?: string }>;
+};
+
+export default async function LicenciasPage({ searchParams }: LicenciasPageProps) {
   const session = await requireCurrentSession();
+  const params = await searchParams;
+  const query = params?.q?.trim() ?? "";
   const licenses = await db.license.findMany({
-    where: { companyId: session.company.id },
+    where: {
+      companyId: session.company.id,
+      ...(query
+        ? {
+            OR: [
+              { provider: { contains: query, mode: "insensitive" as const } },
+              { product: { contains: query, mode: "insensitive" as const } },
+              { currency: { contains: query, mode: "insensitive" as const } },
+              { notes: { contains: query, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    },
     orderBy: [{ renewalDate: "asc" }, { provider: "asc" }],
   });
 
@@ -109,8 +126,20 @@ export default async function LicenciasPage() {
       </header>
 
       <article className="card">
-        <div className="card-header">
+        <div className="card-header table-card-header">
           <h2>Licencias registradas</h2>
+          <form className="search-form" method="get">
+            <input
+              aria-label="Buscar licencias"
+              className="input search-input"
+              defaultValue={query}
+              name="q"
+              placeholder="Buscar licencia..."
+              type="search"
+            />
+            <button className="button secondary compact" type="submit">Buscar</button>
+            {query ? <a className="button secondary compact" href="/licencias">Limpiar</a> : null}
+          </form>
         </div>
         <div className="table-wrap">
           <table className="table">
@@ -136,10 +165,7 @@ export default async function LicenciasPage() {
                     <td>{license.product}</td>
                     <td>{license.seats}</td>
                     <td>
-                      <div className="status-stack">
-                        <StatusBadge value={visibleStatus} />
-                        <LicenseStatusSelect id={license.id} status={visibleStatus} />
-                      </div>
+                      <LicenseStatusSelect id={license.id} status={visibleStatus} />
                     </td>
                     <td>{formatDate(license.purchaseDate)}</td>
                     <td>{formatDate(license.renewalDate)}</td>
@@ -209,6 +235,15 @@ export default async function LicenciasPage() {
                   </tr>
                 );
               })}
+              {licenses.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>
+                    <div className="empty-state">
+                      {query ? "No hay licencias que coincidan con la busqueda." : "No hay licencias registradas."}
+                    </div>
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </div>
