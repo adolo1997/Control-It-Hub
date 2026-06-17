@@ -111,6 +111,12 @@ enum TemplateType {
   FOLLOW_UP
 }
 
+enum ServiceBillingStatus {
+  PENDING_PAYMENT
+  INVOICED
+  PAID
+}
+
 model User {
   id                String       @id @default(cuid())
   email             String       @unique
@@ -148,6 +154,7 @@ model Company {
   serviceJobs     ServiceJob[]
   reminders       Reminder[]
   templates       Template[]
+  priceItems      PriceItem[]
 }
 
 model Membership {
@@ -306,21 +313,25 @@ model QuoteLine {
   totalCents Int
   createdAt  DateTime @default(now())
 
-  quoteId String
-  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteId     String
+  quote       Quote      @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  priceItemId String?
+  priceItem   PriceItem? @relation(fields: [priceItemId], references: [id], onDelete: SetNull)
 
   @@index([quoteId])
+  @@index([priceItemId])
 }
 
 model ServiceJob {
-  id           String   @id @default(cuid())
-  serviceDate  DateTime @default(now())
-  description  String
-  minutesSpent Int?
-  priceCents   Int?
-  observations String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String               @id @default(cuid())
+  serviceDate   DateTime             @default(now())
+  description   String
+  minutesSpent  Int?
+  priceCents    Int?
+  billingStatus ServiceBillingStatus @default(PENDING_PAYMENT)
+  observations  String?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
   companyId String
   company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -328,7 +339,27 @@ model ServiceJob {
   client    CrmClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([companyId, serviceDate])
+  @@index([companyId, billingStatus])
   @@index([clientId])
+}
+
+model PriceItem {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  priceCents  Int
+  vatRate     Decimal  @default(21) @db.Decimal(5, 2)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  quoteLines QuoteLine[]
+
+  @@unique([companyId, name])
+  @@index([companyId, isActive])
 }
 
 model Reminder {

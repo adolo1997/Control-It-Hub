@@ -29,6 +29,9 @@ const statusMap: Record<string, string> = {
   REJECTED: "danger",
   PENDING: "warning",
   COMPLETED: "success",
+  PENDING_PAYMENT: "warning",
+  INVOICED: "info",
+  PAID: "success",
 };
 
 const statusLabels: Record<string, string> = {
@@ -60,6 +63,9 @@ const statusLabels: Record<string, string> = {
   REJECTED: "Rechazado",
   PENDING: "Pendiente",
   COMPLETED: "Completado",
+  PENDING_PAYMENT: "Pendiente de cobrar",
+  INVOICED: "Facturado",
+  PAID: "Cobrado",
 };
 
 export function StatusBadge({ value }: { value: string }) {

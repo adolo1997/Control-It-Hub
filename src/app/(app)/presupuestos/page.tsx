@@ -1,23 +1,29 @@
 import Link from "next/link";
 
 import { Modal } from "@/components/modal";
+import { QuoteForm } from "@/components/quote-form";
 import { StatusBadge } from "@/components/status-badge";
 import { quoteStatusLabels } from "@/lib/crm-labels";
 import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
 import { requireCurrentSession } from "@/lib/session";
 
-import { createQuote, updateQuoteStatus } from "../crm-actions";
+import { updateQuoteStatus } from "../crm-actions";
 
 const quoteStatuses = Object.entries(quoteStatusLabels);
 
 export default async function PresupuestosPage() {
   const session = await requireCurrentSession();
-  const [clients, quotes] = await Promise.all([
+  const [clients, priceItems, quotes] = await Promise.all([
     db.crmClient.findMany({
       where: { companyId: session.company.id },
       orderBy: { name: "asc" },
       select: { id: true, name: true, companyName: true },
+    }),
+    db.priceItem.findMany({
+      where: { companyId: session.company.id, isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, description: true, priceCents: true, vatRate: true },
     }),
     db.quote.findMany({
       where: { companyId: session.company.id },
@@ -34,55 +40,16 @@ export default async function PresupuestosPage() {
           <p className="muted">Propuestas comerciales y seguimiento de aceptacion.</p>
         </div>
         <Modal title="Crear presupuesto" triggerLabel="Crear presupuesto">
-          <form action={createQuote} className="modal-body">
-            <div className="form-grid">
-              <label className="field">
-                Cliente
-                <select className="input" name="clientId" required>
-                  <option value="">Selecciona cliente</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}{client.companyName ? ` - ${client.companyName}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="field">
-                Titulo
-                <input className="input" name="title" placeholder="Presupuesto web, mantenimiento..." required />
-              </label>
-              <label className="field">
-                Estado
-                <select className="input" name="status" defaultValue="DRAFT">
-                  {quoteStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                </select>
-              </label>
-              <label className="field wide">
-                Notas
-                <input className="input" name="notes" />
-              </label>
-            </div>
-
-            <div className="line-editor">
-              <div className="line-editor-header">
-                <span>Concepto</span>
-                <span>Cantidad</span>
-                <span>Precio</span>
-                <span>IVA %</span>
-              </div>
-              {Array.from({ length: 5 }).map((_, index) => (
-                <div className="line-editor-row" key={index}>
-                  <input className="input" name="concept" placeholder={index === 0 ? "Servicio principal" : "Concepto opcional"} />
-                  <input className="input" name="quantity" type="number" step="0.01" min="0" defaultValue={index === 0 ? "1" : ""} />
-                  <input className="input" name="price" inputMode="decimal" placeholder="0.00" />
-                  <input className="input" name="vat" inputMode="decimal" defaultValue="21" />
-                </div>
-              ))}
-            </div>
-            <div className="form-actions">
-              <button className="button" type="submit">Guardar presupuesto</button>
-            </div>
-          </form>
+          <QuoteForm
+            clients={clients}
+            priceItems={priceItems.map((item) => ({
+              id: item.id,
+              name: item.name,
+              description: item.description,
+              price: (item.priceCents / 100).toFixed(2),
+              vatRate: Number(item.vatRate).toFixed(2),
+            }))}
+          />
         </Modal>
       </header>
 

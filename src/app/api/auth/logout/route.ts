@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { sessionCookieName } from "@/lib/session-token";
 
@@ -18,12 +18,22 @@ function clearSessionCookie(response: NextResponse) {
   return response;
 }
 
-export async function GET(request: NextRequest) {
-  const response = NextResponse.redirect(new URL("/login", request.url));
+function redirectToLogin(status = 302) {
+  return new NextResponse(null, {
+    status,
+    headers: {
+      "Cache-Control": "no-store",
+      Location: "/login",
+    },
+  });
+}
+
+export async function GET() {
+  const response = redirectToLogin();
   return clearSessionCookie(response);
 }
 
-export async function POST(request: NextRequest) {
-  const response = NextResponse.redirect(new URL("/login", request.url), { status: 303 });
+export async function POST() {
+  const response = redirectToLogin(303);
   return clearSessionCookie(response);
 }

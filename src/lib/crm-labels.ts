@@ -54,3 +54,9 @@ export const templateTypeLabels: Record<string, string> = {
   QUOTE: "Presupuesto",
   FOLLOW_UP: "Seguimiento",
 };
+
+export const serviceBillingStatusLabels: Record<string, string> = {
+  PENDING_PAYMENT: "Pendiente de cobrar",
+  INVOICED: "Facturado",
+  PAID: "Cobrado",
+};

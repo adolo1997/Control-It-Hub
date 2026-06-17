@@ -1,9 +1,13 @@
 import { Modal } from "@/components/modal";
+import { StatusBadge } from "@/components/status-badge";
+import { serviceBillingStatusLabels } from "@/lib/crm-labels";
 import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
 import { requireCurrentSession } from "@/lib/session";
 
-import { createServiceJob } from "../crm-actions";
+import { createServiceJob, updateServiceBillingStatus } from "../crm-actions";
+
+const billingStatuses = Object.entries(serviceBillingStatusLabels);
 
 export default async function ServiciosPage() {
   const session = await requireCurrentSession();
@@ -48,6 +52,12 @@ export default async function ServiciosPage() {
               Precio cobrado
               <input className="input" inputMode="decimal" name="price" placeholder="0.00" />
             </label>
+            <label className="field">
+              Estado de cobro
+              <select className="input" name="billingStatus" defaultValue="PENDING_PAYMENT">
+                {billingStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
             <label className="field wide">
               Descripcion
               <textarea className="input textarea" name="description" required />
@@ -76,6 +86,8 @@ export default async function ServiciosPage() {
                 <th>Descripcion</th>
                 <th>Tiempo</th>
                 <th>Cobrado</th>
+                <th>Estado cobro</th>
+                <th>Actualizar</th>
               </tr>
             </thead>
             <tbody>
@@ -89,11 +101,21 @@ export default async function ServiciosPage() {
                   </td>
                   <td>{service.minutesSpent ? `${service.minutesSpent} min` : "Sin dato"}</td>
                   <td>{formatMoney(service.priceCents, "EUR")}</td>
+                  <td><StatusBadge value={service.billingStatus} /></td>
+                  <td>
+                    <form action={updateServiceBillingStatus} className="inline-form">
+                      <input name="id" type="hidden" value={service.id} />
+                      <select className="input mini-input" name="billingStatus" defaultValue={service.billingStatus}>
+                        {billingStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
+                      <button className="button secondary compact" type="submit">Guardar</button>
+                    </form>
+                  </td>
                 </tr>
               ))}
               {services.length === 0 ? (
                 <tr>
-                  <td colSpan={5}><div className="empty-state">No hay servicios registrados.</div></td>
+                  <td colSpan={7}><div className="empty-state">No hay servicios registrados.</div></td>
                 </tr>
               ) : null}
             </tbody>

@@ -1,6 +1,7 @@
 import {
   Bell,
   BriefcaseBusiness,
+  Euro,
   FileText,
   Gauge,
   Handshake,
@@ -24,6 +25,7 @@ export function AppSidebar({ companyName, userName, role }: AppSidebarProps) {
     { href: "/dashboard", label: "Dashboard", icon: Gauge },
     { href: "/clientes", label: "Clientes", icon: Users },
     { href: "/solicitudes", label: "Solicitudes", icon: MessageSquareText },
+    { href: "/precios", label: "Precios", icon: Euro },
     { href: "/presupuestos", label: "Presupuestos", icon: FileText },
     { href: "/servicios", label: "Servicios", icon: BriefcaseBusiness },
     { href: "/recordatorios", label: "Recordatorios", icon: Bell },

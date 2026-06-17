@@ -14,6 +14,7 @@ const quoteStatuses = ["DRAFT", "SENT", "ACCEPTED", "REJECTED"] as const;
 const reminderStatuses = ["PENDING", "COMPLETED"] as const;
 const reminderTypes = ["CALL", "RENEWAL", "PAYMENT", "MAINTENANCE", "OTHER"] as const;
 const templateTypes = ["WHATSAPP", "EMAIL", "QUOTE", "FOLLOW_UP"] as const;
+const serviceBillingStatuses = ["PENDING_PAYMENT", "INVOICED", "PAID"] as const;
 
 function requireCrmAccess(role: string) {
   if (!["OWNER", "ADMIN", "TECH", "BILLING"].includes(role)) {
@@ -222,6 +223,7 @@ export async function createQuote(formData: FormData) {
   const quantities = formValues(formData, "quantity");
   const prices = formValues(formData, "price");
   const vats = formValues(formData, "vat");
+  const priceItemIds = formValues(formData, "priceItemId");
 
   const lines = concepts.flatMap((concept, index) => {
     if (!concept) {
@@ -246,11 +248,26 @@ export async function createQuote(formData: FormData) {
       priceCents,
       vatRate: Number.isFinite(vatRate) ? vatRate : 21,
       totalCents: subtotalCents + taxCents,
+      priceItemId: optionalText(priceItemIds[index]),
     }];
   });
 
   if (lines.length === 0) {
     throw new Error("Anade al menos una linea al presupuesto.");
+  }
+
+  const linkedPriceItemIds = lines.flatMap((line) => line.priceItemId ? [line.priceItemId] : []);
+  if (linkedPriceItemIds.length > 0) {
+    const validItems = await db.priceItem.count({
+      where: {
+        companyId: session.company.id,
+        id: { in: linkedPriceItemIds },
+      },
+    });
+
+    if (validItems !== new Set(linkedPriceItemIds).size) {
+      throw new Error("Alguna plantilla de precio no pertenece a esta empresa.");
+    }
   }
 
   const subtotalCents = lines.reduce((total, line) => total + Math.round(Number(line.quantity) * line.priceCents), 0);
@@ -303,6 +320,7 @@ const serviceSchema = z.object({
   description: z.string().trim().min(3),
   minutesSpent: z.string().optional(),
   price: z.string().optional(),
+  billingStatus: z.enum(serviceBillingStatuses).default("PENDING_PAYMENT"),
   observations: z.string().optional(),
 });
 
@@ -321,12 +339,144 @@ export async function createServiceJob(formData: FormData) {
       description: data.description,
       minutesSpent: parseMinutes(data.minutesSpent),
       priceCents: eurosToCents(data.price),
+      billingStatus: data.billingStatus,
       observations: optionalText(data.observations),
     },
   });
 
   revalidatePath("/servicios");
   revalidatePath("/dashboard");
+}
+
+export async function updateServiceBillingStatus(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const data = z.object({
+    id: z.string().min(1),
+    billingStatus: z.enum(serviceBillingStatuses),
+  }).parse(Object.fromEntries(formData));
+
+  const service = await db.serviceJob.findFirst({
+    where: { id: data.id, companyId: session.company.id },
+    select: { id: true },
+  });
+
+  if (!service) {
+    throw new Error("Servicio no encontrado.");
+  }
+
+  await db.serviceJob.update({
+    where: { id: service.id },
+    data: { billingStatus: data.billingStatus },
+  });
+
+  revalidatePath("/servicios");
+  revalidatePath("/dashboard");
+}
+
+const priceItemSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(2),
+  description: z.string().optional(),
+  price: z.string().min(1),
+  vatRate: z.string().optional(),
+  isActive: z.enum(["on"]).optional(),
+});
+
+export async function createPriceItem(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const data = priceItemSchema.parse(Object.fromEntries(formData));
+  const priceCents = eurosToCents(data.price);
+  const vatRate = Number((data.vatRate || "21").replace(",", "."));
+
+  if (priceCents === null) {
+    throw new Error("Precio no valido.");
+  }
+
+  await db.priceItem.upsert({
+    where: {
+      companyId_name: {
+        companyId: session.company.id,
+        name: data.name,
+      },
+    },
+    update: {
+      description: optionalText(data.description),
+      priceCents,
+      vatRate: Number.isFinite(vatRate) ? vatRate : 21,
+      isActive: data.isActive === "on",
+    },
+    create: {
+      companyId: session.company.id,
+      name: data.name,
+      description: optionalText(data.description),
+      priceCents,
+      vatRate: Number.isFinite(vatRate) ? vatRate : 21,
+      isActive: data.isActive === "on",
+    },
+  });
+
+  revalidatePath("/precios");
+  revalidatePath("/presupuestos");
+}
+
+export async function updatePriceItem(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const data = priceItemSchema.extend({ id: z.string().min(1) }).parse(Object.fromEntries(formData));
+  const priceCents = eurosToCents(data.price);
+  const vatRate = Number((data.vatRate || "21").replace(",", "."));
+
+  if (priceCents === null) {
+    throw new Error("Precio no valido.");
+  }
+
+  const item = await db.priceItem.findFirst({
+    where: { id: data.id, companyId: session.company.id },
+    select: { id: true },
+  });
+
+  if (!item) {
+    throw new Error("Precio no encontrado.");
+  }
+
+  await db.priceItem.update({
+    where: { id: item.id },
+    data: {
+      name: data.name,
+      description: optionalText(data.description),
+      priceCents,
+      vatRate: Number.isFinite(vatRate) ? vatRate : 21,
+      isActive: data.isActive === "on",
+    },
+  });
+
+  revalidatePath("/precios");
+  revalidatePath("/presupuestos");
+}
+
+export async function deletePriceItem(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const id = z.string().min(1).parse(formData.get("id"));
+  const item = await db.priceItem.findFirst({
+    where: { id, companyId: session.company.id },
+    select: { id: true },
+  });
+
+  if (!item) {
+    throw new Error("Precio no encontrado.");
+  }
+
+  await db.priceItem.delete({ where: { id: item.id } });
+
+  revalidatePath("/precios");
+  revalidatePath("/presupuestos");
 }
 
 const reminderSchema = z.object({
