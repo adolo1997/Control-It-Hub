@@ -68,6 +68,19 @@ async function ensureClient(companyId: string, clientId: string) {
   }
 }
 
+async function nextQuoteNumber(companyId: string) {
+  const year = new Date().getFullYear();
+  const prefix = `P-${year}-`;
+  const count = await db.quote.count({
+    where: {
+      companyId,
+      quoteNumber: { startsWith: prefix },
+    },
+  });
+
+  return `${prefix}${String(count + 1).padStart(3, "0")}`;
+}
+
 const clientSchema = z.object({
   id: z.string().optional(),
   name: z.string().trim().min(2),
@@ -215,6 +228,7 @@ export async function createQuote(formData: FormData) {
     title: z.string().trim().min(2),
     status: z.enum(quoteStatuses).default("DRAFT"),
     notes: z.string().optional(),
+    conditions: z.string().optional(),
   }).parse(Object.fromEntries(formData));
 
   await ensureClient(session.company.id, header.clientId);
@@ -276,10 +290,12 @@ export async function createQuote(formData: FormData) {
   await db.quote.create({
     data: {
       companyId: session.company.id,
+      quoteNumber: await nextQuoteNumber(session.company.id),
       clientId: header.clientId,
       title: header.title,
       status: header.status,
       notes: optionalText(header.notes),
+      conditions: optionalText(header.conditions),
       subtotalCents,
       taxCents: totalCents - subtotalCents,
       totalCents,
@@ -287,6 +303,66 @@ export async function createQuote(formData: FormData) {
     },
   });
 
+  revalidatePath("/presupuestos");
+  revalidatePath("/dashboard");
+}
+
+export async function createQuoteFromRequest(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const id = z.string().min(1).parse(formData.get("id"));
+  const request = await db.serviceRequest.findFirst({
+    where: { id, companyId: session.company.id },
+    include: { client: true },
+  });
+
+  if (!request) {
+    throw new Error("Solicitud no encontrada.");
+  }
+
+  const client = request.client ?? await db.crmClient.create({
+    data: {
+      companyId: session.company.id,
+      name: request.name,
+      phone: optionalText(request.phone),
+      email: optionalText(request.email),
+      clientType: "PARTICULAR",
+      status: "LEAD",
+      notes: request.description,
+    },
+  });
+
+  await db.quote.create({
+    data: {
+      companyId: session.company.id,
+      clientId: client.id,
+      quoteNumber: await nextQuoteNumber(session.company.id),
+      title: request.serviceType,
+      status: "DRAFT",
+      notes: `Creado desde solicitud: ${request.description}`,
+      conditions: "Validez del presupuesto: 15 dias. Forma de pago a acordar.",
+      lines: {
+        create: [{
+          concept: request.serviceType,
+          quantity: 1,
+          priceCents: 0,
+          vatRate: 21,
+          totalCents: 0,
+        }],
+      },
+    },
+  });
+
+  await db.serviceRequest.update({
+    where: { id: request.id },
+    data: {
+      clientId: client.id,
+      status: request.status === "NEW" ? "CONTACTED" : request.status,
+    },
+  });
+
+  revalidatePath("/solicitudes");
   revalidatePath("/presupuestos");
   revalidatePath("/dashboard");
 }
@@ -585,4 +661,49 @@ export async function deleteTemplate(formData: FormData) {
 
   await db.template.delete({ where: { id: template.id } });
   revalidatePath("/plantillas");
+}
+
+const clientAttachmentSchema = z.object({
+  clientId: z.string().min(1),
+  title: z.string().trim().min(2),
+  url: z.string().url(),
+  notes: z.string().optional(),
+});
+
+export async function createClientAttachment(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const data = clientAttachmentSchema.parse(Object.fromEntries(formData));
+  await ensureClient(session.company.id, data.clientId);
+
+  await db.clientAttachment.create({
+    data: {
+      companyId: session.company.id,
+      clientId: data.clientId,
+      title: data.title,
+      url: data.url,
+      notes: optionalText(data.notes),
+    },
+  });
+
+  revalidatePath(`/clientes/${data.clientId}`);
+}
+
+export async function deleteClientAttachment(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const id = z.string().min(1).parse(formData.get("id"));
+  const attachment = await db.clientAttachment.findFirst({
+    where: { id, companyId: session.company.id },
+    select: { id: true, clientId: true },
+  });
+
+  if (!attachment) {
+    throw new Error("Adjunto no encontrado.");
+  }
+
+  await db.clientAttachment.delete({ where: { id: attachment.id } });
+  revalidatePath(`/clientes/${attachment.clientId}`);
 }

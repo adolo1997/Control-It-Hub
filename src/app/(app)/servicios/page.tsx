@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Modal } from "@/components/modal";
 import { StatusBadge } from "@/components/status-badge";
 import { serviceBillingStatusLabels } from "@/lib/crm-labels";
@@ -9,8 +11,15 @@ import { createServiceJob, updateServiceBillingStatus } from "../crm-actions";
 
 const billingStatuses = Object.entries(serviceBillingStatusLabels);
 
-export default async function ServiciosPage() {
+type ServiciosPageProps = {
+  searchParams?: Promise<{ q?: string; billingStatus?: string }>;
+};
+
+export default async function ServiciosPage({ searchParams }: ServiciosPageProps) {
   const session = await requireCurrentSession();
+  const params = await searchParams;
+  const query = params?.q?.trim() ?? "";
+  const billingStatus = params?.billingStatus?.trim() ?? "";
   const [clients, services] = await Promise.all([
     db.crmClient.findMany({
       where: { companyId: session.company.id },
@@ -18,7 +27,19 @@ export default async function ServiciosPage() {
       select: { id: true, name: true },
     }),
     db.serviceJob.findMany({
-      where: { companyId: session.company.id },
+      where: {
+        companyId: session.company.id,
+        ...(billingStatus ? { billingStatus: billingStatus as "PENDING_PAYMENT" | "INVOICED" | "PAID" } : {}),
+        ...(query
+          ? {
+              OR: [
+                { description: { contains: query, mode: "insensitive" as const } },
+                { observations: { contains: query, mode: "insensitive" as const } },
+                { client: { name: { contains: query, mode: "insensitive" as const } } },
+              ],
+            }
+          : {}),
+      },
       orderBy: { serviceDate: "desc" },
       include: { client: true },
     }),
@@ -59,7 +80,7 @@ export default async function ServiciosPage() {
               </select>
             </label>
             <label className="field wide">
-              Descripcion
+              Descripci�n
               <textarea className="input textarea" name="description" required />
             </label>
             <label className="field wide">
@@ -74,8 +95,17 @@ export default async function ServiciosPage() {
       </header>
 
       <article className="card">
-        <div className="card-header">
+        <div className="card-header table-card-header">
           <h2>Servicios realizados</h2>
+          <form className="filters-bar" method="get">
+            <input className="input search-input" name="q" defaultValue={query} placeholder="Buscar servicio..." type="search" />
+            <select className="input mini-input" name="billingStatus" defaultValue={billingStatus}>
+              <option value="">Todos</option>
+              {billingStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <button className="button secondary compact" type="submit">Filtrar</button>
+            {(query || billingStatus) ? <Link className="button secondary compact" href="/servicios">Limpiar</Link> : null}
+          </form>
         </div>
         <div className="table-wrap">
           <table className="table">
@@ -83,7 +113,7 @@ export default async function ServiciosPage() {
               <tr>
                 <th>Fecha</th>
                 <th>Cliente</th>
-                <th>Descripcion</th>
+                <th>Descripci�n</th>
                 <th>Tiempo</th>
                 <th>Cobrado</th>
                 <th>Estado cobro</th>
@@ -125,3 +155,4 @@ export default async function ServiciosPage() {
     </>
   );
 }
+

@@ -12,8 +12,16 @@ import { updateQuoteStatus } from "../crm-actions";
 
 const quoteStatuses = Object.entries(quoteStatusLabels);
 
-export default async function PresupuestosPage() {
+type PresupuestosPageProps = {
+  searchParams?: Promise<{ q?: string; status?: string }>;
+};
+
+export default async function PresupuestosPage({ searchParams }: PresupuestosPageProps) {
   const session = await requireCurrentSession();
+  const params = await searchParams;
+  const query = params?.q?.trim() ?? "";
+  const status = params?.status?.trim() ?? "";
+
   const [clients, priceItems, quotes] = await Promise.all([
     db.crmClient.findMany({
       where: { companyId: session.company.id },
@@ -26,7 +34,19 @@ export default async function PresupuestosPage() {
       select: { id: true, name: true, description: true, priceCents: true, vatRate: true },
     }),
     db.quote.findMany({
-      where: { companyId: session.company.id },
+      where: {
+        companyId: session.company.id,
+        ...(status ? { status: status as "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" } : {}),
+        ...(query
+          ? {
+              OR: [
+                { title: { contains: query, mode: "insensitive" as const } },
+                { quoteNumber: { contains: query, mode: "insensitive" as const } },
+                { client: { name: { contains: query, mode: "insensitive" as const } } },
+              ],
+            }
+          : {}),
+      },
       orderBy: { createdAt: "desc" },
       include: { client: true, lines: true },
     }),
@@ -37,7 +57,7 @@ export default async function PresupuestosPage() {
       <header className="topbar">
         <div>
           <h1>Presupuestos</h1>
-          <p className="muted">Propuestas comerciales y seguimiento de aceptacion.</p>
+          <p className="muted">Propuestas comerciales y seguimiento de aceptación.</p>
         </div>
         <Modal title="Crear presupuesto" triggerLabel="Crear presupuesto">
           <QuoteForm
@@ -54,8 +74,17 @@ export default async function PresupuestosPage() {
       </header>
 
       <article className="card">
-        <div className="card-header">
+        <div className="card-header table-card-header">
           <h2>Presupuestos registrados</h2>
+          <form className="filters-bar" method="get">
+            <input className="input search-input" name="q" defaultValue={query} placeholder="Buscar presupuesto..." type="search" />
+            <select className="input mini-input" name="status" defaultValue={status}>
+              <option value="">Todos</option>
+              {quoteStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <button className="button secondary compact" type="submit">Filtrar</button>
+            {(query || status) ? <Link className="button secondary compact" href="/presupuestos">Limpiar</Link> : null}
+          </form>
         </div>
         <div className="table-wrap">
           <table className="table">
@@ -73,8 +102,8 @@ export default async function PresupuestosPage() {
               {quotes.map((quote) => (
                 <tr key={quote.id}>
                   <td>
-                    <strong>{quote.title}</strong>
-                    <span className="table-note">{quote.lines.length} lineas</span>
+                    <strong>{quote.quoteNumber ?? "Sin número"} · {quote.title}</strong>
+                    <span className="table-note">{quote.lines.length} líneas</span>
                   </td>
                   <td>{quote.client.name}</td>
                   <td><StatusBadge value={quote.status} /></td>

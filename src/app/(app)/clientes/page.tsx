@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Modal } from "@/components/modal";
 import { StatusBadge } from "@/components/status-badge";
 import { clientStatusLabels, clientTypeLabels } from "@/lib/crm-labels";
@@ -9,10 +11,30 @@ import { createClient, deleteClient, updateClient } from "../crm-actions";
 const clientTypes = Object.entries(clientTypeLabels);
 const clientStatuses = Object.entries(clientStatusLabels);
 
-export default async function ClientesPage() {
+type ClientesPageProps = {
+  searchParams?: Promise<{ q?: string; status?: string }>;
+};
+
+export default async function ClientesPage({ searchParams }: ClientesPageProps) {
   const session = await requireCurrentSession();
+  const params = await searchParams;
+  const query = params?.q?.trim() ?? "";
+  const status = params?.status?.trim() ?? "";
   const clients = await db.crmClient.findMany({
-    where: { companyId: session.company.id },
+    where: {
+      companyId: session.company.id,
+      ...(status ? { status: status as "ACTIVE" | "INACTIVE" | "LEAD" | "ARCHIVED" } : {}),
+      ...(query
+        ? {
+            OR: [
+              { name: { contains: query, mode: "insensitive" as const } },
+              { companyName: { contains: query, mode: "insensitive" as const } },
+              { phone: { contains: query, mode: "insensitive" as const } },
+              { email: { contains: query, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    },
     orderBy: [{ status: "asc" }, { name: "asc" }],
   });
 
@@ -34,8 +56,17 @@ export default async function ClientesPage() {
       </header>
 
       <article className="card">
-        <div className="card-header">
+        <div className="card-header table-card-header">
           <h2>Listado de clientes</h2>
+          <form className="filters-bar" method="get">
+            <input className="input search-input" name="q" defaultValue={query} placeholder="Buscar cliente..." type="search" />
+            <select className="input mini-input" name="status" defaultValue={status}>
+              <option value="">Todos</option>
+              {clientStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <button className="button secondary compact" type="submit">Filtrar</button>
+            {(query || status) ? <Link className="button secondary compact" href="/clientes">Limpiar</Link> : null}
+          </form>
         </div>
         <div className="table-wrap">
           <table className="table">
@@ -53,14 +84,14 @@ export default async function ClientesPage() {
               {clients.map((client) => (
                 <tr key={client.id}>
                   <td>
-                    <strong>{client.name}</strong>
+                    <Link className="table-link" href={`/clientes/${client.id}`}>{client.name}</Link>
                     {client.notes ? <span className="table-note">{client.notes}</span> : null}
                   </td>
                   <td>{client.companyName ?? "Sin empresa"}</td>
                   <td>{clientTypeLabels[client.clientType]}</td>
                   <td>
                     <div className="stacked-text">
-                      <span>{client.phone ?? "Sin telefono"}</span>
+                      <span>{client.phone ?? "Sin tel�fono"}</span>
                       <span className="muted">{client.email ?? "Sin email"}</span>
                     </div>
                   </td>
@@ -86,7 +117,7 @@ export default async function ClientesPage() {
               ))}
               {clients.length === 0 ? (
                 <tr>
-                  <td colSpan={6}><div className="empty-state">Todavia no hay clientes registrados.</div></td>
+                  <td colSpan={6}><div className="empty-state">Todav�a no hay clientes registrados.</div></td>
                 </tr>
               ) : null}
             </tbody>
@@ -152,3 +183,4 @@ function ClientFields({ client }: ClientFieldsProps) {
     </>
   );
 }
+

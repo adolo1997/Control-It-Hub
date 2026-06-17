@@ -143,18 +143,19 @@ model Company {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  memberships     Membership[]
-  integrations    Integration[]
-  licenses        License[]
-  records         OperationalRecord[]
-  auditLogs       AuditLog[]
-  crmClients      CrmClient[]
-  serviceRequests ServiceRequest[]
-  quotes          Quote[]
-  serviceJobs     ServiceJob[]
-  reminders       Reminder[]
-  templates       Template[]
-  priceItems      PriceItem[]
+  memberships       Membership[]
+  integrations      Integration[]
+  licenses          License[]
+  records           OperationalRecord[]
+  auditLogs         AuditLog[]
+  crmClients        CrmClient[]
+  serviceRequests   ServiceRequest[]
+  quotes            Quote[]
+  serviceJobs       ServiceJob[]
+  reminders         Reminder[]
+  templates         Template[]
+  priceItems        PriceItem[]
+  clientAttachments ClientAttachment[]
 }
 
 model Membership {
@@ -252,10 +253,11 @@ model CrmClient {
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  requests  ServiceRequest[]
-  quotes    Quote[]
-  services  ServiceJob[]
-  reminders Reminder[]
+  requests    ServiceRequest[]
+  quotes      Quote[]
+  services    ServiceJob[]
+  reminders   Reminder[]
+  attachments ClientAttachment[]
 
   @@index([companyId, status])
   @@index([companyId, name])
@@ -284,9 +286,11 @@ model ServiceRequest {
 
 model Quote {
   id            String      @id @default(cuid())
+  quoteNumber   String?
   title         String
   status        QuoteStatus @default(DRAFT)
   notes         String?
+  conditions    String?
   subtotalCents Int         @default(0)
   taxCents      Int         @default(0)
   totalCents    Int         @default(0)
@@ -300,6 +304,7 @@ model Quote {
 
   lines QuoteLine[]
 
+  @@unique([companyId, quoteNumber])
   @@index([companyId, status])
   @@index([companyId, createdAt])
 }
@@ -360,6 +365,22 @@ model PriceItem {
 
   @@unique([companyId, name])
   @@index([companyId, isActive])
+}
+
+model ClientAttachment {
+  id        String   @id @default(cuid())
+  title     String
+  url       String
+  notes     String?
+  createdAt DateTime @default(now())
+
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    CrmClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, createdAt])
+  @@index([clientId])
 }
 
 model Reminder {

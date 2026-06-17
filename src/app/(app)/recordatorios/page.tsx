@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Modal } from "@/components/modal";
 import { StatusBadge } from "@/components/status-badge";
 import { reminderStatusLabels, reminderTypeLabels } from "@/lib/crm-labels";
@@ -10,8 +12,14 @@ import { createReminder, updateReminderStatus } from "../crm-actions";
 const reminderStatuses = Object.entries(reminderStatusLabels);
 const reminderTypes = Object.entries(reminderTypeLabels);
 
-export default async function RecordatoriosPage() {
+type RecordatoriosPageProps = {
+  searchParams?: Promise<{ status?: string }>;
+};
+
+export default async function RecordatoriosPage({ searchParams }: RecordatoriosPageProps) {
   const session = await requireCurrentSession();
+  const params = await searchParams;
+  const status = params?.status?.trim() ?? "";
   const [clients, reminders] = await Promise.all([
     db.crmClient.findMany({
       where: { companyId: session.company.id },
@@ -19,7 +27,10 @@ export default async function RecordatoriosPage() {
       select: { id: true, name: true },
     }),
     db.reminder.findMany({
-      where: { companyId: session.company.id },
+      where: {
+        companyId: session.company.id,
+        ...(status ? { status: status as "PENDING" | "COMPLETED" } : {}),
+      },
       orderBy: [{ status: "asc" }, { dueDate: "asc" }],
       include: { client: true },
     }),
@@ -73,8 +84,16 @@ export default async function RecordatoriosPage() {
       </header>
 
       <article className="card">
-        <div className="card-header">
+        <div className="card-header table-card-header">
           <h2>Recordatorios registrados</h2>
+          <form className="filters-bar" method="get">
+            <select className="input mini-input" name="status" defaultValue={status}>
+              <option value="">Todos</option>
+              {reminderStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <button className="button secondary compact" type="submit">Filtrar</button>
+            {status ? <Link className="button secondary compact" href="/recordatorios">Limpiar</Link> : null}
+          </form>
         </div>
         <div className="table-wrap">
           <table className="table">
@@ -90,7 +109,7 @@ export default async function RecordatoriosPage() {
             </thead>
             <tbody>
               {reminders.map((reminder) => (
-                <tr key={reminder.id}>
+                <tr className={reminder.status === "PENDING" && reminder.dueDate < new Date() ? "row-overdue" : undefined} key={reminder.id}>
                   <td>
                     <strong>{reminder.title}</strong>
                     {reminder.notes ? <span className="table-note">{reminder.notes}</span> : null}

@@ -110,6 +110,14 @@ export function QuoteForm({ clients, priceItems }: QuoteFormProps) {
           Notas
           <input className="input" name="notes" />
         </label>
+        <label className="field wide">
+          Condiciones
+          <input
+            className="input"
+            name="conditions"
+            defaultValue="Validez del presupuesto: 15 dias. Forma de pago a acordar."
+          />
+        </label>
       </div>
 
       <div className="price-picker">

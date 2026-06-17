@@ -1,3 +1,4 @@
+import { CopyButton } from "@/components/copy-button";
 import { Modal } from "@/components/modal";
 import { templateTypeLabels } from "@/lib/crm-labels";
 import { db } from "@/lib/db";
@@ -19,7 +20,7 @@ export default async function PlantillasPage() {
       <header className="topbar">
         <div>
           <h1>Plantillas</h1>
-          <p className="muted">Textos reutilizables para comunicacion y presupuestos.</p>
+          <p className="muted">Textos reutilizables para comunicaci�n y presupuestos.</p>
         </div>
         <Modal title="Guardar plantilla" triggerLabel="Guardar plantilla">
           <form action={createTemplate} className="modal-body form-grid">
@@ -52,10 +53,13 @@ export default async function PlantillasPage() {
                 <h2>{template.name}</h2>
                 <p className="muted">{templateTypeLabels[template.type]}</p>
               </div>
-              <form action={deleteTemplate}>
-                <input name="id" type="hidden" value={template.id} />
-                <button className="button danger compact" type="submit">Eliminar</button>
-              </form>
+              <div className="actions-cell">
+                <CopyButton text={template.content} />
+                <form action={deleteTemplate}>
+                  <input name="id" type="hidden" value={template.id} />
+                  <button className="button danger compact" type="submit">Eliminar</button>
+                </form>
+              </div>
             </div>
             <div className="card-body">
               <pre className="template-content">{template.content}</pre>
@@ -71,3 +75,4 @@ export default async function PlantillasPage() {
     </>
   );
 }
+

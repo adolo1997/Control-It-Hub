@@ -40,6 +40,7 @@ export default async function PresupuestoDetallePage({ params }: PresupuestoDeta
               <p className="muted">Millán Manager</p>
             </div>
             <div className="quote-meta">
+              <span>{quote.quoteNumber ?? "Presupuesto sin número"}</span>
               <strong>{quote.title}</strong>
               <span>{formatDate(quote.createdAt)}</span>
               <StatusBadge value={quote.status} />
@@ -89,6 +90,13 @@ export default async function PresupuestoDetallePage({ params }: PresupuestoDeta
             <section className="quote-block">
               <h2>Notas</h2>
               <p>{quote.notes}</p>
+            </section>
+          ) : null}
+
+          {quote.conditions ? (
+            <section className="quote-block">
+              <h2>Condiciones</h2>
+              <p>{quote.conditions}</p>
             </section>
           ) : null}
         </div>

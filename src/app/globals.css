@@ -1,5 +1,5 @@
 :root {
-  --background: #f6f7f9;
+  --background: #f3f5f7;
   --panel: #ffffff;
   --panel-strong: #111827;
   --text: #1f2937;
@@ -11,7 +11,7 @@
   --danger: #b91c1c;
   --warning: #a16207;
   --success: #15803d;
-  --shadow: 0 18px 45px rgba(31, 41, 55, 0.08);
+  --shadow: 0 10px 28px rgba(31, 41, 55, 0.06);
 }
 
 * {
@@ -98,8 +98,8 @@ textarea {
 
 .input {
   width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
+  min-height: 38px;
+  padding: 8px 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--text);
@@ -112,12 +112,12 @@ textarea {
 }
 
 .button {
-  min-height: 42px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border: 0;
   border-radius: 8px;
   color: #fff;
@@ -148,8 +148,8 @@ textarea {
 }
 
 .button.compact {
-  min-height: 34px;
-  padding: 7px 10px;
+  min-height: 32px;
+  padding: 6px 9px;
   font-size: 13px;
 }
 
@@ -180,12 +180,12 @@ textarea {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 268px minmax(0, 1fr);
+  grid-template-columns: 232px minmax(0, 1fr);
 }
 
 .sidebar {
   min-height: 100vh;
-  padding: 22px;
+  padding: 16px;
   color: #e5e7eb;
   background: #17202a;
   position: sticky;
@@ -196,7 +196,7 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   font-weight: 800;
   color: #fff;
 }
@@ -211,11 +211,11 @@ textarea {
 }
 
 .tenant-card {
-  padding: 14px;
+  padding: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .tenant-card strong {
@@ -226,7 +226,7 @@ textarea {
 
 .nav {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nav a,
@@ -237,7 +237,7 @@ textarea {
   gap: 10px;
   border-radius: 8px;
   color: #cbd5e1;
-  padding: 10px;
+  padding: 9px 10px;
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -252,7 +252,7 @@ textarea {
 }
 
 .main {
-  padding: 28px;
+  padding: 20px;
 }
 
 .topbar {
@@ -260,12 +260,12 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .topbar h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1.2;
 }
 
@@ -275,16 +275,16 @@ textarea {
 
 .grid {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .stats-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .content-grid {
   grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr);
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .card {
@@ -295,7 +295,7 @@ textarea {
 }
 
 .main > .card + .card {
-  margin-top: 16px;
+  margin-top: 12px;
 }
 
 .card-header {
@@ -303,7 +303,7 @@ textarea {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  padding: 18px 18px 0;
+  padding: 14px 14px 0;
 }
 
 .card-header h2 {
@@ -312,13 +312,13 @@ textarea {
 }
 
 .card-body {
-  padding: 18px;
+  padding: 14px;
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
   margin-top: 0;
 }
 
@@ -375,7 +375,7 @@ textarea {
 }
 
 .modal-body {
-  padding: 18px;
+  padding: 14px;
 }
 
 .actions-cell {
@@ -435,10 +435,11 @@ textarea {
 
 .table-card-header {
   align-items: flex-start;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
 }
 
-.search-form {
+.search-form,
+.filters-bar {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -452,7 +453,9 @@ textarea {
 }
 
 .stat {
-  padding: 18px;
+  position: relative;
+  min-height: 96px;
+  padding: 14px;
 }
 
 .stat span {
@@ -462,8 +465,17 @@ textarea {
 
 .stat strong {
   display: block;
-  margin-top: 8px;
-  font-size: 30px;
+  margin-top: 6px;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.stat svg {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  color: var(--brand);
+  opacity: 0.75;
 }
 
 .table-wrap {
@@ -478,7 +490,7 @@ textarea {
 
 .table th,
 .table td {
-  padding: 13px 14px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
@@ -488,6 +500,19 @@ textarea {
   color: var(--muted);
   font-size: 12px;
   text-transform: uppercase;
+}
+
+.compact-table {
+  min-width: 0;
+}
+
+.compact-table td {
+  padding: 9px 12px;
+}
+
+.table-link {
+  color: var(--brand-strong);
+  font-weight: 800;
 }
 
 .table-note,
@@ -682,6 +707,46 @@ textarea {
   background: #fafafa;
 }
 
+.record-item.overdue,
+.row-overdue td {
+  background: #fff1f2;
+}
+
+.attention-card {
+  margin-top: 12px;
+  border-color: #facc15;
+}
+
+.attention-card .card-header {
+  padding-bottom: 10px;
+}
+
+.attention-card .card-header p {
+  margin: 4px 0 0;
+}
+
+.attention-card .card-header > strong {
+  font-size: 22px;
+}
+
+.compact-list {
+  display: grid;
+  gap: 8px;
+}
+
+.compact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.compact-row:last-child {
+  border-bottom: 0;
+}
+
 .record-item strong {
   font-size: 14px;
 }
@@ -738,7 +803,7 @@ textarea {
 
   .login-panel,
   .main {
-    padding: 24px;
+    padding: 16px;
   }
 
   .sidebar {
@@ -746,9 +811,27 @@ textarea {
     position: static;
   }
 
+  .nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .topbar {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .filters-bar,
+  .search-form,
+  .actions-cell,
+  .inline-form {
+    width: 100%;
+  }
+
+  .filters-bar > *,
+  .search-form > *,
+  .actions-cell > *,
+  .inline-form > * {
+    flex: 1 1 140px;
   }
 }
 

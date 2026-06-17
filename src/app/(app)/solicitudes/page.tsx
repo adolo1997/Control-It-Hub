@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Modal } from "@/components/modal";
 import { StatusBadge } from "@/components/status-badge";
 import { requestStatusLabels, urgencyLabels } from "@/lib/crm-labels";
@@ -5,13 +7,20 @@ import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { requireCurrentSession } from "@/lib/session";
 
-import { createServiceRequest, updateServiceRequestStatus } from "../crm-actions";
+import { createQuoteFromRequest, createServiceRequest, updateServiceRequestStatus } from "../crm-actions";
 
 const requestStatuses = Object.entries(requestStatusLabels);
 const urgencies = Object.entries(urgencyLabels);
 
-export default async function SolicitudesPage() {
+type SolicitudesPageProps = {
+  searchParams?: Promise<{ q?: string; status?: string }>;
+};
+
+export default async function SolicitudesPage({ searchParams }: SolicitudesPageProps) {
   const session = await requireCurrentSession();
+  const params = await searchParams;
+  const query = params?.q?.trim() ?? "";
+  const status = params?.status?.trim() ?? "";
   const [clients, requests] = await Promise.all([
     db.crmClient.findMany({
       where: { companyId: session.company.id },
@@ -19,7 +28,20 @@ export default async function SolicitudesPage() {
       select: { id: true, name: true },
     }),
     db.serviceRequest.findMany({
-      where: { companyId: session.company.id },
+      where: {
+        companyId: session.company.id,
+        ...(status ? { status: status as "NEW" | "CONTACTED" | "IN_PROGRESS" | "CLOSED" | "LOST" } : {}),
+        ...(query
+          ? {
+              OR: [
+                { name: { contains: query, mode: "insensitive" as const } },
+                { phone: { contains: query, mode: "insensitive" as const } },
+                { email: { contains: query, mode: "insensitive" as const } },
+                { serviceType: { contains: query, mode: "insensitive" as const } },
+              ],
+            }
+          : {}),
+      },
       orderBy: { createdAt: "desc" },
       include: { client: true },
     }),
@@ -70,7 +92,7 @@ export default async function SolicitudesPage() {
               </select>
             </label>
             <label className="field wide">
-              Descripcion
+              Descripci�n
               <textarea className="input textarea" name="description" required />
             </label>
             <div className="form-actions wide">
@@ -81,8 +103,17 @@ export default async function SolicitudesPage() {
       </header>
 
       <article className="card">
-        <div className="card-header">
+        <div className="card-header table-card-header">
           <h2>Solicitudes recibidas</h2>
+          <form className="filters-bar" method="get">
+            <input className="input search-input" name="q" defaultValue={query} placeholder="Buscar solicitud..." type="search" />
+            <select className="input mini-input" name="status" defaultValue={status}>
+              <option value="">Todas</option>
+              {requestStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+            </select>
+            <button className="button secondary compact" type="submit">Filtrar</button>
+            {(query || status) ? <Link className="button secondary compact" href="/solicitudes">Limpiar</Link> : null}
+          </form>
         </div>
         <div className="table-wrap">
           <table className="table">
@@ -93,7 +124,7 @@ export default async function SolicitudesPage() {
                 <th>Urgencia</th>
                 <th>Estado</th>
                 <th>Fecha</th>
-                <th>Actualizar</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -101,7 +132,7 @@ export default async function SolicitudesPage() {
                 <tr key={request.id}>
                   <td>
                     <strong>{request.name}</strong>
-                    <span className="table-note">{request.phone ?? "Sin telefono"} · {request.email ?? "Sin email"}</span>
+                    <span className="table-note">{request.phone ?? "Sin tel�fono"} · {request.email ?? "Sin email"}</span>
                     {request.client ? <span className="table-note">Cliente: {request.client.name}</span> : null}
                   </td>
                   <td>
@@ -112,13 +143,19 @@ export default async function SolicitudesPage() {
                   <td><StatusBadge value={request.status} /></td>
                   <td>{formatDate(request.createdAt)}</td>
                   <td>
-                    <form action={updateServiceRequestStatus} className="inline-form">
-                      <input name="id" type="hidden" value={request.id} />
-                      <select className="input mini-input" name="status" defaultValue={request.status}>
-                        {requestStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                      </select>
-                      <button className="button secondary compact" type="submit">Guardar</button>
-                    </form>
+                    <div className="actions-cell">
+                      <form action={updateServiceRequestStatus} className="inline-form">
+                        <input name="id" type="hidden" value={request.id} />
+                        <select className="input mini-input" name="status" defaultValue={request.status}>
+                          {requestStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                        </select>
+                        <button className="button secondary compact" type="submit">Guardar</button>
+                      </form>
+                      <form action={createQuoteFromRequest}>
+                        <input name="id" type="hidden" value={request.id} />
+                        <button className="button compact" type="submit">Presupuestar</button>
+                      </form>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -134,3 +171,4 @@ export default async function SolicitudesPage() {
     </>
   );
 }
+

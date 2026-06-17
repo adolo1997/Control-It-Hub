@@ -65,7 +65,7 @@ export default async function UsuariosPage() {
                   <option value="OWNER">Owner</option>
                   <option value="ADMIN">Admin</option>
                   <option value="TECH">Tecnico</option>
-                  <option value="BILLING">Facturacion</option>
+                  <option value="BILLING">Facturación</option>
                   <option value="VIEWER">Solo lectura</option>
                 </select>
               </label>

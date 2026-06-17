@@ -18,7 +18,7 @@ export default async function PreciosPage() {
       <header className="topbar">
         <div>
           <h1>Precios</h1>
-          <p className="muted">Catalogo reutilizable para rellenar presupuestos rapidamente.</p>
+          <p className="muted">Cat�logo reutilizable para rellenar presupuestos r�pidamente.</p>
         </div>
         <Modal title="Crear precio" triggerLabel="Crear precio">
           <form action={createPriceItem} className="modal-body form-grid">
@@ -84,7 +84,7 @@ export default async function PreciosPage() {
                 <tr>
                   <td colSpan={5}>
                     <div className="empty-state">
-                      Aun no hay precios guardados. Crea tus conceptos habituales para usarlos en presupuestos.
+                      A�n no hay precios guardados. Crea tus conceptos habituales para usarlos en presupuestos.
                     </div>
                   </td>
                 </tr>
@@ -112,7 +112,7 @@ function PriceItemFields({ item }: PriceItemFieldsProps) {
     <>
       <label className="field">
         Concepto
-        <input className="input" name="name" defaultValue={item?.name ?? ""} placeholder="Configuracion inicial PC" required />
+        <input className="input" name="name" defaultValue={item?.name ?? ""} placeholder="Configuraci�n inicial PC" required />
       </label>
       <label className="field">
         Precio
@@ -127,9 +127,10 @@ function PriceItemFields({ item }: PriceItemFieldsProps) {
         Activo
       </label>
       <label className="field wide">
-        Descripcion
+        Descripci�n
         <textarea className="input textarea" name="description" defaultValue={item?.description ?? ""} />
       </label>
     </>
   );
 }
+
