@@ -434,20 +434,33 @@ textarea {
 }
 
 .table-card-header {
-  align-items: flex-start;
+  align-items: center;
   padding-bottom: 10px;
 }
 
 .search-form,
 .filters-bar {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 170px auto auto;
+  align-items: center;
   gap: 8px;
+  max-width: 760px;
+  margin-left: auto;
+}
+
+.filters-bar .input,
+.search-form .input {
+  width: 100%;
+}
+
+.filters-bar .button,
+.search-form .button {
+  white-space: nowrap;
 }
 
 .search-input {
-  min-width: min(300px, 100%);
+  min-width: 0;
   min-height: 34px;
   padding: 7px 10px;
 }
@@ -827,8 +840,13 @@ textarea {
     width: 100%;
   }
 
-  .filters-bar > *,
-  .search-form > *,
+  .filters-bar,
+  .search-form {
+    grid-template-columns: 1fr;
+    max-width: none;
+    margin-left: 0;
+  }
+
   .actions-cell > *,
   .inline-form > * {
     flex: 1 1 140px;
