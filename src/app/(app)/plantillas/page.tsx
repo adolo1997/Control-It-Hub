@@ -23,7 +23,7 @@ export default async function PlantillasPage() {
           <p className="muted">Textos reutilizables para comunicación y presupuestos.</p>
         </div>
         <Modal title="Guardar plantilla" triggerLabel="Guardar plantilla">
-          <form action={createTemplate} className="modal-body form-grid">
+          <form action={createTemplate} className="modal-body template-form-grid">
             <label className="field">
               Nombre
               <input className="input" name="name" required />
@@ -34,11 +34,11 @@ export default async function PlantillasPage() {
                 {templateTypes.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </select>
             </label>
-            <label className="field wide">
+            <label className="field template-content-field">
               Contenido
               <textarea className="input textarea tall-textarea" name="content" required />
             </label>
-            <div className="form-actions wide">
+            <div className="form-actions template-actions">
               <button className="button" type="submit">Guardar plantilla</button>
             </div>
           </form>

@@ -1,14 +1,13 @@
 import Link from "next/link";
 
 import { Modal } from "@/components/modal";
+import { QuoteDeleteButton } from "@/components/quote-delete-button";
 import { QuoteForm } from "@/components/quote-form";
-import { StatusBadge } from "@/components/status-badge";
+import { QuoteStatusSelect } from "@/components/quote-status-select";
 import { quoteStatusLabels } from "@/lib/crm-labels";
 import { db } from "@/lib/db";
 import { formatDate, formatMoney } from "@/lib/format";
 import { requireCurrentSession } from "@/lib/session";
-
-import { updateQuoteStatus } from "../crm-actions";
 
 const quoteStatuses = Object.entries(quoteStatusLabels);
 
@@ -95,7 +94,8 @@ export default async function PresupuestosPage({ searchParams }: PresupuestosPag
                 <th>Estado</th>
                 <th>Total</th>
                 <th>Fecha</th>
-                <th>Acciones</th>
+                <th>PDF</th>
+                <th>Eliminar</th>
               </tr>
             </thead>
             <tbody>
@@ -106,28 +106,22 @@ export default async function PresupuestosPage({ searchParams }: PresupuestosPag
                     <span className="table-note">{quote.lines.length} líneas</span>
                   </td>
                   <td>{quote.client.name}</td>
-                  <td><StatusBadge value={quote.status} /></td>
+                  <td><QuoteStatusSelect id={quote.id} status={quote.status} /></td>
                   <td>{formatMoney(quote.totalCents, "EUR")}</td>
                   <td>{formatDate(quote.createdAt)}</td>
                   <td>
-                    <div className="actions-cell">
-                      <form action={updateQuoteStatus} className="inline-form">
-                        <input name="id" type="hidden" value={quote.id} />
-                        <select className="input mini-input" name="status" defaultValue={quote.status}>
-                          {quoteStatuses.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                        </select>
-                        <button className="button secondary compact" type="submit">Guardar</button>
-                      </form>
-                      <Link className="button secondary compact" href={`/presupuestos/${quote.id}`}>
-                        Preparar PDF
-                      </Link>
-                    </div>
+                    <Link className="button secondary compact" href={`/presupuestos/${quote.id}`}>
+                      Preparar PDF
+                    </Link>
+                  </td>
+                  <td>
+                    <QuoteDeleteButton id={quote.id} label={quote.quoteNumber ?? quote.title} />
                   </td>
                 </tr>
               ))}
               {quotes.length === 0 ? (
                 <tr>
-                  <td colSpan={6}><div className="empty-state">No hay presupuestos creados.</div></td>
+                  <td colSpan={7}><div className="empty-state">No hay presupuestos creados.</div></td>
                 </tr>
               ) : null}
             </tbody>

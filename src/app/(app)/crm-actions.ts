@@ -390,6 +390,29 @@ export async function updateQuoteStatus(formData: FormData) {
   revalidatePath("/dashboard");
 }
 
+export async function deleteQuote(formData: FormData) {
+  const session = await requireCurrentSession();
+  requireCrmAccess(session.membershipRole);
+
+  const id = z.string().min(1).parse(formData.get("id"));
+  const quote = await db.quote.findFirst({
+    where: { id, companyId: session.company.id },
+    select: { id: true },
+  });
+
+  if (!quote) {
+    throw new Error("Presupuesto no encontrado.");
+  }
+
+  await db.$transaction([
+    db.quoteLine.deleteMany({ where: { quoteId: quote.id } }),
+    db.quote.delete({ where: { id: quote.id } }),
+  ]);
+
+  revalidatePath("/presupuestos");
+  revalidatePath("/dashboard");
+}
+
 const serviceSchema = z.object({
   clientId: z.string().min(1),
   serviceDate: z.string().optional(),
