@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
-  title: "Control IT Hub",
-  description: "Plataforma multiempresa para control operativo IT.",
+  title: "Millán Manager",
+  description: "Panel interno de Sistemas Millán.",
 };
 
 export default function RootLayout({

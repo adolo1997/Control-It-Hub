@@ -2,7 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { sessionCookieName, verifySessionToken } from "@/lib/session-token";
 
-const protectedPaths = ["/dashboard", "/licencias", "/integraciones", "/registros", "/usuarios", "/empresas"];
+const protectedPaths = [
+  "/dashboard",
+  "/clientes",
+  "/solicitudes",
+  "/presupuestos",
+  "/servicios",
+  "/recordatorios",
+  "/plantillas",
+  "/configuracion",
+  "/licencias",
+  "/integraciones",
+  "/registros",
+  "/usuarios",
+  "/empresas",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -43,5 +57,21 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/dashboard/:path*", "/licencias/:path*", "/integraciones/:path*", "/registros/:path*", "/usuarios/:path*", "/empresas/:path*"],
+  matcher: [
+    "/",
+    "/login",
+    "/dashboard/:path*",
+    "/clientes/:path*",
+    "/solicitudes/:path*",
+    "/presupuestos/:path*",
+    "/servicios/:path*",
+    "/recordatorios/:path*",
+    "/plantillas/:path*",
+    "/configuracion/:path*",
+    "/licencias/:path*",
+    "/integraciones/:path*",
+    "/registros/:path*",
+    "/usuarios/:path*",
+    "/empresas/:path*",
+  ],
 };

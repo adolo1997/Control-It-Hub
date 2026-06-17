@@ -54,6 +54,63 @@ enum RecordSeverity {
   CRITICAL
 }
 
+enum CrmClientType {
+  PARTICULAR
+  EMPRESA
+  AUTONOMO
+  COMUNIDAD
+  OTRO
+}
+
+enum CrmClientStatus {
+  ACTIVE
+  INACTIVE
+  LEAD
+  ARCHIVED
+}
+
+enum ServiceRequestStatus {
+  NEW
+  CONTACTED
+  IN_PROGRESS
+  CLOSED
+  LOST
+}
+
+enum RequestUrgency {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+}
+
+enum ReminderStatus {
+  PENDING
+  COMPLETED
+}
+
+enum ReminderType {
+  CALL
+  RENEWAL
+  PAYMENT
+  MAINTENANCE
+  OTHER
+}
+
+enum TemplateType {
+  WHATSAPP
+  EMAIL
+  QUOTE
+  FOLLOW_UP
+}
+
 model User {
   id                String       @id @default(cuid())
   email             String       @unique
@@ -80,11 +137,17 @@ model Company {
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
-  memberships  Membership[]
-  integrations Integration[]
-  licenses     License[]
-  records      OperationalRecord[]
-  auditLogs    AuditLog[]
+  memberships     Membership[]
+  integrations    Integration[]
+  licenses        License[]
+  records         OperationalRecord[]
+  auditLogs       AuditLog[]
+  crmClients      CrmClient[]
+  serviceRequests ServiceRequest[]
+  quotes          Quote[]
+  serviceJobs     ServiceJob[]
+  reminders       Reminder[]
+  templates       Template[]
 }
 
 model Membership {
@@ -142,20 +205,20 @@ model License {
   companyId String
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
+  @@unique([companyId, provider, product])
   @@index([companyId, renewalDate])
   @@index([companyId, status])
-  @@unique([companyId, provider, product])
 }
 
 model OperationalRecord {
-  id        String         @id @default(cuid())
-  source    String
-  title     String
-  detail    String?
-  severity  RecordSeverity @default(INFO)
-  occurredAt DateTime      @default(now())
-  metadata  Json?
-  createdAt DateTime       @default(now())
+  id         String         @id @default(cuid())
+  source     String
+  title      String
+  detail     String?
+  severity   RecordSeverity @default(INFO)
+  occurredAt DateTime       @default(now())
+  metadata   Json?
+  createdAt  DateTime       @default(now())
 
   companyId     String
   company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -164,6 +227,141 @@ model OperationalRecord {
 
   @@index([companyId, occurredAt])
   @@index([companyId, severity])
+}
+
+model CrmClient {
+  id          String          @id @default(cuid())
+  name        String
+  companyName String?
+  clientType  CrmClientType   @default(PARTICULAR)
+  phone       String?
+  email       String?
+  address     String?
+  notes       String?
+  status      CrmClientStatus @default(ACTIVE)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  requests  ServiceRequest[]
+  quotes    Quote[]
+  services  ServiceJob[]
+  reminders Reminder[]
+
+  @@index([companyId, status])
+  @@index([companyId, name])
+}
+
+model ServiceRequest {
+  id          String               @id @default(cuid())
+  name        String
+  phone       String?
+  email       String?
+  serviceType String
+  description String
+  urgency     RequestUrgency       @default(NORMAL)
+  status      ServiceRequestStatus @default(NEW)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    CrmClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, status])
+  @@index([companyId, createdAt])
+}
+
+model Quote {
+  id            String      @id @default(cuid())
+  title         String
+  status        QuoteStatus @default(DRAFT)
+  notes         String?
+  subtotalCents Int         @default(0)
+  taxCents      Int         @default(0)
+  totalCents    Int         @default(0)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    CrmClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  lines QuoteLine[]
+
+  @@index([companyId, status])
+  @@index([companyId, createdAt])
+}
+
+model QuoteLine {
+  id         String   @id @default(cuid())
+  concept    String
+  quantity   Decimal  @default(1) @db.Decimal(10, 2)
+  priceCents Int
+  vatRate    Decimal  @default(21) @db.Decimal(5, 2)
+  totalCents Int
+  createdAt  DateTime @default(now())
+
+  quoteId String
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
+model ServiceJob {
+  id           String   @id @default(cuid())
+  serviceDate  DateTime @default(now())
+  description  String
+  minutesSpent Int?
+  priceCents   Int?
+  observations String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clientId  String
+  client    CrmClient @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, serviceDate])
+  @@index([clientId])
+}
+
+model Reminder {
+  id        String         @id @default(cuid())
+  title     String
+  dueDate   DateTime
+  status    ReminderStatus @default(PENDING)
+  type      ReminderType   @default(OTHER)
+  notes     String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  companyId String
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  clientId  String?
+  client    CrmClient? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, status, dueDate])
+}
+
+model Template {
+  id        String       @id @default(cuid())
+  name      String
+  type      TemplateType
+  content   String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  companyId String
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, type, name])
+  @@index([companyId, type])
 }
 
 model AuditLog {

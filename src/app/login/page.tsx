@@ -17,9 +17,9 @@ export default async function LoginPage() {
         <div className="brand-mark" aria-hidden="true">
           <ShieldCheck size={24} />
         </div>
-        <h1>Control IT Hub</h1>
+        <h1>Millán Manager</h1>
         <p className="muted">
-          Acceso seguro para empresas, licencias, integraciones y registros operativos.
+          Acceso seguro al panel interno de Sistemas Millán.
         </p>
         <LoginForm />
       </section>
