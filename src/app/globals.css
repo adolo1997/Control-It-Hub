@@ -408,10 +408,11 @@ textarea {
   margin: 0;
 }
 
-.status-select {
+.status-select,
+.status-button {
   min-height: 28px;
   max-width: 230px;
-  padding: 4px 28px 4px 10px;
+  padding: 4px 10px;
   border: 0;
   border-radius: 999px;
   cursor: pointer;
@@ -419,27 +420,43 @@ textarea {
   font-weight: 800;
 }
 
-.status-select.success {
+.status-select {
+  padding-right: 28px;
+}
+
+.status-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.status-select.success,
+.status-button.success {
   color: #14532d;
   background: #dcfce7;
 }
 
-.status-select.warning {
+.status-select.warning,
+.status-button.warning {
   color: #713f12;
   background: #fef3c7;
 }
 
-.status-select.info {
+.status-select.info,
+.status-button.info {
   color: #1e3a8a;
   background: #dbeafe;
 }
 
-.status-select.danger {
+.status-select.danger,
+.status-button.danger {
   color: #7f1d1d;
   background: #fee2e2;
 }
 
-.status-select:focus {
+.status-select:focus,
+.status-button:focus {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
