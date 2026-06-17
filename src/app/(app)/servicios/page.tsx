@@ -80,7 +80,7 @@ export default async function ServiciosPage({ searchParams }: ServiciosPageProps
               </select>
             </label>
             <label className="field wide">
-              Descripci�n
+              Descripción
               <textarea className="input textarea" name="description" required />
             </label>
             <label className="field wide">
@@ -113,7 +113,7 @@ export default async function ServiciosPage({ searchParams }: ServiciosPageProps
               <tr>
                 <th>Fecha</th>
                 <th>Cliente</th>
-                <th>Descripci�n</th>
+                <th>Descripción</th>
                 <th>Tiempo</th>
                 <th>Cobrado</th>
                 <th>Estado cobro</th>

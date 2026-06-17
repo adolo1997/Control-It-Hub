@@ -30,7 +30,7 @@ export function AppSidebar({ companyName, userName, role }: AppSidebarProps) {
     { href: "/servicios", label: "Servicios", icon: BriefcaseBusiness },
     { href: "/recordatorios", label: "Recordatorios", icon: Bell },
     { href: "/plantillas", label: "Plantillas", icon: Handshake },
-    { href: "/configuracion", label: "Configuracion", icon: Settings },
+    { href: "/configuracion", label: "Configuración", icon: Settings },
   ];
 
   return (

@@ -20,7 +20,7 @@ export default async function PlantillasPage() {
       <header className="topbar">
         <div>
           <h1>Plantillas</h1>
-          <p className="muted">Textos reutilizables para comunicaci�n y presupuestos.</p>
+          <p className="muted">Textos reutilizables para comunicación y presupuestos.</p>
         </div>
         <Modal title="Guardar plantilla" triggerLabel="Guardar plantilla">
           <form action={createTemplate} className="modal-body form-grid">

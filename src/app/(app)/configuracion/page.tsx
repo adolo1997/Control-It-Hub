@@ -3,14 +3,14 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/status-badge";
 import { requireCurrentSession } from "@/lib/session";
 
-export default async function ConfiguracionPage() {
+export default async function ConfiguraciónPage() {
   const session = await requireCurrentSession();
 
   return (
     <>
       <header className="topbar">
         <div>
-          <h1>Configuracion</h1>
+          <h1>Configuración</h1>
           <p className="muted">Datos de sesion, empresa y accesos administrativos.</p>
         </div>
       </header>

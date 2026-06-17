@@ -91,7 +91,7 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
                   <td>{clientTypeLabels[client.clientType]}</td>
                   <td>
                     <div className="stacked-text">
-                      <span>{client.phone ?? "Sin tel�fono"}</span>
+                      <span>{client.phone ?? "Sin teléfono"}</span>
                       <span className="muted">{client.email ?? "Sin email"}</span>
                     </div>
                   </td>
@@ -117,7 +117,7 @@ export default async function ClientesPage({ searchParams }: ClientesPageProps) 
               ))}
               {clients.length === 0 ? (
                 <tr>
-                  <td colSpan={6}><div className="empty-state">Todav�a no hay clientes registrados.</div></td>
+                  <td colSpan={6}><div className="empty-state">Todavía no hay clientes registrados.</div></td>
                 </tr>
               ) : null}
             </tbody>

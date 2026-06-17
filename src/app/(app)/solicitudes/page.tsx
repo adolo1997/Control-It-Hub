@@ -92,7 +92,7 @@ export default async function SolicitudesPage({ searchParams }: SolicitudesPageP
               </select>
             </label>
             <label className="field wide">
-              Descripci�n
+              Descripción
               <textarea className="input textarea" name="description" required />
             </label>
             <div className="form-actions wide">
@@ -132,7 +132,7 @@ export default async function SolicitudesPage({ searchParams }: SolicitudesPageP
                 <tr key={request.id}>
                   <td>
                     <strong>{request.name}</strong>
-                    <span className="table-note">{request.phone ?? "Sin tel�fono"} · {request.email ?? "Sin email"}</span>
+                    <span className="table-note">{request.phone ?? "Sin teléfono"} · {request.email ?? "Sin email"}</span>
                     {request.client ? <span className="table-note">Cliente: {request.client.name}</span> : null}
                   </td>
                   <td>
