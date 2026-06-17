@@ -421,7 +421,17 @@ textarea {
 }
 
 .status-select {
-  padding-right: 28px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: none;
+}
+
+.status-select::-ms-expand {
+  display: none;
+}
+
+.status-select.clean-select {
+  padding-right: 10px;
 }
 
 .status-button {

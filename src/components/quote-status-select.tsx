@@ -19,8 +19,6 @@ const statusClassNames = {
   REJECTED: "danger",
 };
 
-const statusOrder = ["DRAFT", "SENT", "ACCEPTED", "REJECTED"] as const;
-
 type QuoteStatusSelectProps = {
   id: string;
   status: keyof typeof statusLabels;
@@ -35,9 +33,7 @@ export function QuoteStatusSelect({ id, status }: QuoteStatusSelectProps) {
     setCurrentStatus(status);
   }, [status]);
 
-  function updateToNextStatus() {
-    const currentIndex = statusOrder.indexOf(currentStatus);
-    const nextStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+  function updateStatus(nextStatus: keyof typeof statusLabels) {
     const formData = new FormData();
     formData.set("id", id);
     formData.set("status", nextStatus);
@@ -49,15 +45,19 @@ export function QuoteStatusSelect({ id, status }: QuoteStatusSelectProps) {
   }
 
   return (
-    <button
+    <select
       aria-label={`Cambiar estado del presupuesto. Estado actual: ${label}`}
-      className={clsx("status-button", statusClassNames[currentStatus])}
+      className={clsx("status-select clean-select", statusClassNames[currentStatus])}
       disabled={isPending}
-      onClick={updateToNextStatus}
+      onChange={(event) => updateStatus(event.target.value as keyof typeof statusLabels)}
       title="Pulsa para cambiar el estado"
-      type="button"
+      value={currentStatus}
     >
-      {label}
-    </button>
+      {Object.entries(statusLabels).map(([value, optionLabel]) => (
+        <option key={value} value={value}>
+          {optionLabel}
+        </option>
+      ))}
+    </select>
   );
 }
